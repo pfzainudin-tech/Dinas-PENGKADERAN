@@ -1,0 +1,259 @@
+{
+  "entities": {
+    "AdminSession": {
+      "title": "AdminSession",
+      "description": "Verified admin privilege document for a signed-in user who authenticated via Admin Security.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the admin user."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Assigned role."
+        },
+        "verificationDigest": {
+          "type": "string",
+          "description": "SHA-256 hex digest of verified admin credentials."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "role", "verificationDigest", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Member profile for Dinas Kader PC IPNU IPPNU Mojokerto.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Member's full name (Nama Lengkap)."
+        },
+        "unitOrigin": {
+          "type": "string",
+          "description": "Member's PAC, Ranting, or Komisariat origin."
+        },
+        "email": {
+          "type": "string",
+          "description": "Member's Google account email."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "fullName", "createdAt", "updatedAt"]
+    },
+    "UserParticipation": {
+      "title": "UserParticipation",
+      "description": "User's own participation status (IKUT/TIDAK) indexed per schedule for profile statistics.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID."
+        },
+        "scheduleId": {
+          "type": "string",
+          "description": "Referenced schedule document ID."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["IKUT", "TIDAK"],
+          "description": "Participation status chosen by the member."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "scheduleId", "status", "createdAt", "updatedAt"]
+    },
+    "Schedule": {
+      "title": "Schedule",
+      "description": "Pengkaderan schedule (MAKESTA / LAKMUD) managed by Admin and shared across members.",
+      "type": "object",
+      "properties": {
+        "organizationId": {
+          "type": "string",
+          "enum": ["pc_mojokerto"],
+          "description": "Organization partition key."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the pengkaderan event."
+        },
+        "programType": {
+          "type": "string",
+          "enum": ["MAKESTA", "LAKMUD"],
+          "description": "Pengkaderan tier."
+        },
+        "executorLevel": {
+          "type": "string",
+          "enum": [
+            "PAC",
+            "Ranting",
+            "Komisariat",
+            "Komisariat Pondok Pesantren",
+            "Komisariat Perguruan Tinggi"
+          ],
+          "description": "Organizing level for recapitulation."
+        },
+        "executorName": {
+          "type": "string",
+          "description": "Specific organizing unit name."
+        },
+        "location": {
+          "type": "string",
+          "description": "Event venue."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed event description editable anytime by Admin."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Gregorian start date in YYYY-MM-DD format."
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Gregorian end date in YYYY-MM-DD format."
+        },
+        "timeText": {
+          "type": "string",
+          "description": "Event time range label."
+        },
+        "year": {
+          "type": "integer",
+          "description": "Gregorian year extracted from startDate."
+        },
+        "month": {
+          "type": "integer",
+          "description": "Gregorian month (1-12) extracted from startDate."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Whether Admin checked this schedule as completed."
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "UID of Admin who created the schedule."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "organizationId",
+        "title",
+        "programType",
+        "executorLevel",
+        "executorName",
+        "location",
+        "description",
+        "startDate",
+        "endDate",
+        "timeText",
+        "year",
+        "month",
+        "completed",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ScheduleAttendance": {
+      "title": "ScheduleAttendance",
+      "description": "Member attendance checklist entry (IKUT or TIDAK) for a specific schedule.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the responding member."
+        },
+        "scheduleId": {
+          "type": "string",
+          "description": "Parent schedule document ID."
+        },
+        "memberName": {
+          "type": "string",
+          "description": "Display name of the responding member."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["IKUT", "TIDAK"],
+          "description": "Attendance choice checked by member."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp written via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "scheduleId",
+        "memberName",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminSession" },
+      "description": "Verified admin privilege markers keyed by user UID."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private member profile documents."
+    },
+    "/users/{userId}/participations/{scheduleId}": {
+      "schema": { "$ref": "#/entities/UserParticipation" },
+      "description": "User-scoped participation mirror per schedule."
+    },
+    "/schedules/{scheduleId}": {
+      "schema": { "$ref": "#/entities/Schedule" },
+      "description": "Organization-wide pengkaderan schedules."
+    },
+    "/schedules/{scheduleId}/attendances/{memberUid}": {
+      "schema": { "$ref": "#/entities/ScheduleAttendance" },
+      "description": "Member attendance checklist items (IKUT / TIDAK) per schedule."
+    }
+  }
+}

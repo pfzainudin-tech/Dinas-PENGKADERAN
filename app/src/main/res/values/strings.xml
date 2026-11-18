@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Dinas Kader</string>
+    <string name="app_full_title">DINAS KADER PC IPNU IPPNU MOJOKERTO</string>
+    <string name="app_subtitle">Sistem Penjadwalan &amp; Rekapitulasi Pengkaderan</string>
+    <string name="nav_beranda">Beranda</string>
+    <string name="nav_jadwal">Jadwal</string>
+    <string name="nav_rekap">Rekap</string>
+    <string name="nav_profil">Profil</string>
+    <string name="sign_in_title">Masuk dengan Akun Google</string>
+    <string name="sign_in_subtitle">Sinkronkan jadwal pengkaderan, presensi pengawalan, dan rekapitulasi cabang secara real-time.</string>
+    <string name="sign_in_button">Masuk dengan Google</string>
+    <string name="sign_out_button">Keluar Akun</string>
+    <string name="admin_security_title">Admin Security</string>
+    <string name="admin_login_button">Masuk Mode Admin</string>
+    <string name="admin_logout_button">Keluar Mode Admin</string>
+    <string name="attendance_ikut">IKUT</string>
+    <string name="attendance_tidak">TIDAK</string>
+    <string name="schedule_completed_label">Jadwal Selesai</string>
+    <string name="notifications_title">Notifikasi Jadwal</string>
+    <string name="notification_channel_name">Notifikasi Pengkaderan</string>
+    <string name="notification_channel_desc">Pemberitahuan otomatis jadwal baru, perubahan deskripsi, dan pengingat pengkaderan.</string>
+</resources>

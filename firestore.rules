@@ -1,0 +1,264 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+        'email' in request.auth.token &&
+        request.auth.token.email == 'pfzainudin@gmail.com' &&
+        'email_verified' in request.auth.token &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        isBootstrappedAdmin()
+      );
+    }
+
+    function isValidAdminDoc(data) {
+      return data.userId is string &&
+        data.userId.size() >= 1 &&
+        data.userId.size() <= 128 &&
+        data.role == 'admin' &&
+        data.verificationDigest is string &&
+        data.verificationDigest.size() == 64 &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string &&
+        data.userId.size() >= 1 &&
+        data.userId.size() <= 128 &&
+        data.fullName is string &&
+        data.fullName.size() >= 1 &&
+        data.fullName.size() <= 100 &&
+        (!('unitOrigin' in data) || (data.unitOrigin is string && data.unitOrigin.size() <= 120)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 150)) &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidParticipation(data) {
+      return data.userId is string &&
+        data.userId.size() >= 1 &&
+        data.userId.size() <= 128 &&
+        data.scheduleId is string &&
+        data.scheduleId.size() >= 1 &&
+        data.scheduleId.size() <= 128 &&
+        data.status in ['IKUT', 'TIDAK'] &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidSchedule(data) {
+      return data.organizationId == 'pc_mojokerto' &&
+        data.title is string &&
+        data.title.size() >= 3 &&
+        data.title.size() <= 120 &&
+        data.programType in ['MAKESTA', 'LAKMUD'] &&
+        data.executorLevel in [
+          'PAC',
+          'Ranting',
+          'Komisariat',
+          'Komisariat Pondok Pesantren',
+          'Komisariat Perguruan Tinggi'
+        ] &&
+        data.executorName is string &&
+        data.executorName.size() >= 2 &&
+        data.executorName.size() <= 120 &&
+        data.location is string &&
+        data.location.size() >= 2 &&
+        data.location.size() <= 150 &&
+        data.description is string &&
+        data.description.size() <= 1000 &&
+        data.startDate is string &&
+        data.startDate.size() == 10 &&
+        data.startDate.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+        data.endDate is string &&
+        data.endDate.size() == 10 &&
+        data.endDate.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
+        data.timeText is string &&
+        data.timeText.size() >= 1 &&
+        data.timeText.size() <= 60 &&
+        data.year is int &&
+        data.year >= 2000 &&
+        data.year <= 2100 &&
+        data.month is int &&
+        data.month >= 1 &&
+        data.month <= 12 &&
+        data.completed is bool &&
+        data.createdBy is string &&
+        data.createdBy.size() >= 1 &&
+        data.createdBy.size() <= 128 &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    function isValidAttendance(data) {
+      return data.userId is string &&
+        data.userId.size() >= 1 &&
+        data.userId.size() <= 128 &&
+        data.scheduleId is string &&
+        data.scheduleId.size() >= 1 &&
+        data.scheduleId.size() <= 128 &&
+        data.memberName is string &&
+        data.memberName.size() >= 1 &&
+        data.memberName.size() <= 100 &&
+        data.status in ['IKUT', 'TIDAK'] &&
+        data.createdAt is timestamp &&
+        data.createdAt <= request.time &&
+        data.updatedAt is timestamp &&
+        data.updatedAt <= request.time;
+    }
+
+    match /admins/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidAdminDoc(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().keys().hasAll(['userId', 'role', 'verificationDigest', 'createdAt']) &&
+        incoming().keys().hasOnly(['userId', 'role', 'verificationDigest', 'createdAt']) &&
+        (
+          incoming().verificationDigest == '1fbc93077e21e0f32bb1e6a41de3c018ab7457498f0965c9479a2984c3d71606' ||
+          isBootstrappedAdmin()
+        );
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && request.auth.uid == userId;
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidUserProfile(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().keys().hasAll(['userId', 'fullName', 'createdAt', 'updatedAt']) &&
+        incoming().keys().hasOnly(['userId', 'fullName', 'unitOrigin', 'email', 'createdAt', 'updatedAt']);
+      allow update: if isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidUserProfile(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'unitOrigin', 'email', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+
+      match /participations/{scheduleId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(scheduleId) && request.auth.uid == userId;
+        allow list: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isSignedIn() &&
+          isValidId(userId) &&
+          isValidId(scheduleId) &&
+          request.auth.uid == userId &&
+          isValidParticipation(incoming()) &&
+          incoming().userId == request.auth.uid &&
+          incoming().scheduleId == scheduleId &&
+          incoming().keys().hasAll(['userId', 'scheduleId', 'status', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['userId', 'scheduleId', 'status', 'createdAt', 'updatedAt']) &&
+          exists(/databases/$(database)/documents/schedules/$(scheduleId));
+        allow update: if isSignedIn() &&
+          isValidId(userId) &&
+          isValidId(scheduleId) &&
+          request.auth.uid == userId &&
+          isValidParticipation(incoming()) &&
+          incoming().userId == existing().userId &&
+          incoming().scheduleId == existing().scheduleId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+        allow delete: if isSignedIn() && isValidId(userId) && isValidId(scheduleId) && request.auth.uid == userId;
+      }
+    }
+
+    match /schedules/{scheduleId} {
+      allow get: if isSignedIn() && isValidId(scheduleId) && existing().organizationId == 'pc_mojokerto';
+      allow list: if isSignedIn() && existing().organizationId == 'pc_mojokerto';
+      allow create: if isSignedIn() &&
+        isValidId(scheduleId) &&
+        isValidSchedule(incoming()) &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().keys().hasAll([
+          'organizationId', 'title', 'programType', 'executorLevel',
+          'executorName', 'location', 'description', 'startDate', 'endDate',
+          'timeText', 'year', 'month', 'completed', 'createdBy',
+          'createdAt', 'updatedAt'
+        ]) &&
+        incoming().keys().hasOnly([
+          'organizationId', 'title', 'programType', 'executorLevel',
+          'executorName', 'location', 'description', 'startDate', 'endDate',
+          'timeText', 'year', 'month', 'completed', 'createdBy',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isAdmin();
+      allow update: if isSignedIn() &&
+        isValidId(scheduleId) &&
+        isValidSchedule(incoming()) &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'programType', 'executorLevel', 'executorName',
+          'location', 'description', 'startDate', 'endDate',
+          'timeText', 'year', 'month', 'completed', 'updatedAt'
+        ]) &&
+        isAdmin();
+      allow delete: if isSignedIn() && isValidId(scheduleId) && isAdmin();
+
+      match /attendances/{memberUid} {
+        allow get: if isSignedIn() && isValidId(scheduleId) && isValidId(memberUid) && existing().scheduleId == scheduleId;
+        allow list: if isSignedIn() && existing().scheduleId == scheduleId;
+        allow create: if isSignedIn() &&
+          isValidId(scheduleId) &&
+          isValidId(memberUid) &&
+          request.auth.uid == memberUid &&
+          isValidAttendance(incoming()) &&
+          incoming().userId == request.auth.uid &&
+          incoming().scheduleId == scheduleId &&
+          incoming().keys().hasAll(['userId', 'scheduleId', 'memberName', 'status', 'createdAt', 'updatedAt']) &&
+          incoming().keys().hasOnly(['userId', 'scheduleId', 'memberName', 'status', 'createdAt', 'updatedAt']) &&
+          exists(/databases/$(database)/documents/schedules/$(scheduleId));
+        allow update: if isSignedIn() &&
+          isValidId(scheduleId) &&
+          isValidId(memberUid) &&
+          request.auth.uid == memberUid &&
+          isValidAttendance(incoming()) &&
+          incoming().userId == existing().userId &&
+          incoming().scheduleId == existing().scheduleId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['memberName', 'status', 'updatedAt']);
+        allow delete: if isSignedIn() && isValidId(scheduleId) && isValidId(memberUid) && (request.auth.uid == memberUid || isAdmin());
+      }
+    }
+  }
+}
